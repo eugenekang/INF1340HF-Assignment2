@@ -27,21 +27,69 @@ def decide(input_file, watchlist_file, countries_file):
     :return: List of strings. Possible values of strings are: "Accept", "Reject", "Secondary", and "Quarantine"
     """
 
+    # open files, convert files to python style
     with open(input_file, "r") as input_reader:
-        #do thing
+        input_contents = input_reader.read()
+        input_contents = json.loads(input_contents)
     with open(watchlist_file, "r") as watchlist_reader:
-        #do thing2
+        watchlist_contents = watchlist_reader.read()
+        watchlist_contents = json.loads(watchlist_contents)
     with open(countries_file, "r") as countries_reader:
-        #do thing3
+       countries_contents = countries_reader.read()
+       countries_contents = json.loads(countries_contents)
 
-    if
-        return["Reject"]
-    elif
-        return["Quarantine"]
-    elif
-        return["Secondary"]
-    else
-        return ["Accept"]
+    # order of priority: quarantine, reject, secondary, and accept
+
+    # [first order], quarantine
+    # create medical list
+    medical_list = []
+    # collect country code
+    for line in countries_contents.values():
+        if line["medical_advisory"] != "":
+            medical_list.append(line["code"])
+    # check if the traveller comes from the country that has a medical advisory
+    for entry in input_contents:
+        if entry["from"]["country"] in medical_list:
+            return["Quarantine"]
+
+    # [second order],secondary
+    # create list for watch list info
+    first_list = []
+    last_list = []
+    passport_list = []
+    # collect info in lists
+    for line in watchlist_contents.values():
+        if line["first_name"] !="":
+            first_list.append(line["first_name"])
+        if line["last_name"] !="":
+            last_list.append(line["last_name"])
+        if line["passport"] !="":
+            passport_list.append(line["passport"])
+    # check traveller info vs watchlist
+    for entry in input_contents:
+
+
+
+
+    # check incomplete entry
+    for entry in input_contents:
+        for value in entry.values():
+            if value == "":
+                return["Reject"]
+        for home in entry["home"].values():
+            if home == "":
+                return["Reject"]
+        for froms in entry["from"].values():
+            if froms == "":
+                return["Reject"]
+    #if
+    #    return["Reject"]
+    #elif
+    #    return["Quarantine"]
+    #elif
+    #    return["Secondary"]
+    #else
+    #    return ["Accept"]
 
 
 def valid_passport_format(passport_number):
