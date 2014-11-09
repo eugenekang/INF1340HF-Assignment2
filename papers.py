@@ -29,24 +29,29 @@ def decide(input_file, watchlist_file, countries_file):
 
     # open files, convert files to python style
     # example_entries.json
-    with open(input_file, "r") as input_reader:
-        #File to string
-        input_contents = input_reader.read()
-        # make string contents all uppercase
-        input_contents.lower()
-        #string load to dict/list, each entry in list is 1 record in the json
-        input_contents = json.loads(input_contents)
-
-    with open(watchlist_file, "r") as watchlist_reader:
-        watchlist_contents = watchlist_reader.read()
-        watchlist_contents = json.loads(watchlist_contents)
-    with open(countries_file, "r") as countries_reader:
-       countries_contents = countries_reader.read()
-       countries_contents = json.loads(countries_contents)
-
+    try:
+        with open(input_file, "r") as input_reader:
+            #File to string
+            input_contents = input_reader.read()
+            #string load to dict/list, each entry in list is 1 record in the json
+            input_contents = json.loads(input_contents.lower())
+    except FileNotFoundError:
+        raise FileNotFoundError("Cannot find file")
+    try:
+        with open(watchlist_file, "r") as watchlist_reader:
+            watchlist_contents = watchlist_reader.read()
+            watchlist_contents = json.loads(watchlist_contents.lower())
+    except FileNotFoundError:
+        raise FileNotFoundError("Cannot find file")
+    try:
+        with open(countries_file, "r") as countries_reader:
+            countries_contents = countries_reader.read()
+            countries_contents = json.loads(countries_contents.lower())
+    except FileNotFoundError:
+        raise FileNotFoundError("Cannot find file")
+    # create result list
+    result = []
     # order of priority: quarantine, reject, secondary, and accept
-
-    # [first order], quarantine
     # create medical list
     medical_list = []
     # collect country code
@@ -58,9 +63,8 @@ def decide(input_file, watchlist_file, countries_file):
     #entry is a genetic/var
     for entry in input_contents:
         if entry["from"]["country"] in medical_list:
-            return["Quarantine"]
+            result.append("Quarantine")
 
-    # [second order],secondary
     # create list for watch list info
     first_list = []
     last_list = []
@@ -76,31 +80,42 @@ def decide(input_file, watchlist_file, countries_file):
     # check traveller info vs watchlist
     for entry in input_contents:
         if entry["passport"] in passport_list or entry["first_name"] in first_list or entry["last_name"] in last_list:
-            return["Secondary"]
+            result.append("Secondary")
 
     # check incomplete entry
     for entry in input_contents:
         for value in entry.values():
             if value == "":
-                return["Reject"]
+                result.append("Reject")
         for home in entry["home"].values():
             if home == "":
-                return["Reject"]
-        for froms in entry["from"].values():
-            if froms == "":
-                return["Reject"]
+                result.append("Reject")
+        for location in entry["from"].values():
+            if location == "":
+                result.append("Reject")
+
+    # Check the returning traveller
+    for entry in input_contents:
+        if entry["entry_reason"] == "returning":
+            for location in entry["from"].values():
+                if location == "kan":
+                    result.append("Accept")
+    for entry in input_contents:
+        for location in entry["from"].values():
+            if location == "kan":
+                result.append("Accept")
 
     # create lists for visit visas
     visit_visa_list = []
     for line in countries_contents.values():
         if line["visitor_visa_required"] == 1:
-            visit_visa_list.append.lower(line["code"])
+            visit_visa_list.append(line["code"])
 
     # create lists for transit visas
     transit_visa_list = []
     for line in countries_contents.values():
         if line["transit_visa_required"] == 1:
-            transit_visa_list.append.lower(line["code"])
+            transit_visa_list.append(line["code"])
 
     # check if visiting
     for entry in input_contents:
@@ -110,9 +125,9 @@ def decide(input_file, watchlist_file, countries_file):
                 try:
                     # check for valid visa date
                     if valid_visa_date(entry["visa"]["date"]) != True:
-                        return["Reject"]
+                        result.append("Reject")
                 except:
-                    return ["Reject"]
+                    result.append("Reject")
 
     # check if in transit
     for entry in input_contents:
@@ -120,23 +135,26 @@ def decide(input_file, watchlist_file, countries_file):
             if entry["home"]["country"] in transit_visa_list:
                 try:
                     if valid_visa_date(entry["visa"]["date"]) != True:
-                        return["Reject"]
+                        result.append("Reject")
                 except:
-                    return ["Reject"]
+                    result.append("Reject")
 
-    #if
-    #    return["Reject"]
-    #elif
-    #    return["Quarantine"]
-    #elif
-    #    return["Secondary"]
-    #else
-    #    return ["Accept"]
+    # final decision
+    if "Quarantine" in result:
+        return["Quarantine"]
+    elif "Reject" in result:
+        return["Reject"]
+    elif "Secondary" in result:
+        return["Secondary"]
+    elif "Accept" in result:
+        return ["Accept"]
+    else:
+        return ["Accept"]
 
 
 def valid_passport_format(passport_number):
     """
-    Checks whether a pasport number is five sets of five alpha-number characters separated by dashes
+    Checks whether a passport number is five sets of five alpha-number characters separated by dashes
     :param passport_number: alpha-numeric string
     :return: Boolean; True if the format is valid, False otherwise
     """
