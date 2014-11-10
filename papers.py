@@ -130,12 +130,14 @@ def decide(input_file, watchlist_file, countries_file):
     # check if in transit
         if entry["entry_reason"] == "transit":
             if entry["home"]["country"] in transit_visa_list:
-
+                try:
                     if valid_date_format(entry["visa"]["date"]) is not True:
                         result.append("Reject")
                     # check for valid visa date
                     if valid_visa_date(entry["visa"]["date"]) is not True:
                         result.append("Reject")
+                except:
+                    result.append("Reject")
     # check passport format
         if valid_passport_format(entry["passport"]) is not True:
             result.append("Reject")

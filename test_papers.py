@@ -20,6 +20,7 @@ def test_basic():
     assert decide("test_watchlist.json", "watchlist.json", "countries.json") == ["Secondary"]
     assert decide("test_quarantine.json", "watchlist.json", "countries.json") == ["Quarantine"]
     assert decide("test_lowercase.json", "watchlist.json", "countries.json") == ["Accept"]
+    assert decide("test_raises_all_flags.json", "watchlist.json", "countries.json") == ["Quarantine"]
 
 
 def test_files():
@@ -28,14 +29,25 @@ def test_files():
         decide("", "watchlist.json", "countries.json")
         decide("test_returning_citizen.json", "watchlist.json", "")
 
+
 def test_empty():
-    assert decide("test_emptyname.json", "watchlist.json", "countries.json") == ["Reject"]
+    assert decide("test_empty_fname.json", "watchlist.json", "countries.json") == ["Reject"]
+    assert decide("test_empty_lname.json", "watchlist.json", "countries.json") == ["Reject"]
     assert decide("test_emptycountry.json", "watchlist.json", "countries.json") == ["Reject"]
+    assert decide("test_nopassport.json", "watchlist.json", "countries.json") == ["Reject"]
+
 
 def test_wronginput():
     assert decide("test_wrongpassport.json", "watchlist.json", "countries.json") == ["Reject"]
     assert decide("test_wrongformat.json", "watchlist.json", "countries.json") == ["Reject"]
+    assert decide("test_nonexistent_country.json", "watchlist.json", "countries.json") == ["Reject"]
+
 
 def test_wrongvisa():
     assert decide("test_wrongvisa.json", "watchlist.json", "countries.json") == ["Reject"]
+
+
+def test_compromised_citizen():
+    assert decide("test_returning_quarantine.json", "watchlist.json", "countries.json") == ["Quarantine"]
+    assert decide("test_returning_watchlisted.json", "watchlist.json", "countries.json") == ["Secondary"]
 
