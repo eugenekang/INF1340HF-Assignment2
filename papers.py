@@ -20,20 +20,21 @@ def decide(input_file, watchlist_file, countries_file):
     """
     Decides whether a traveller's entry into Kanadia should be accepted
 
-    :param input_file: The name of a JSON formatted file that contains cases to decide
-    :param watchlist_file: The name of a JSON formatted file that contains names and passport numbers on a watchlist
-    :param countries_file: The name of a JSON formatted file that contains country data, such as whether
-        an entry or transit visa is required, and whether there is currently a medical advisory
-    :return: List of strings. Possible values of strings are: "Accept", "Reject", "Secondary", and "Quarantine"
+    :param input_file: The name of a JSON formatted file that contains
+        cases to decide
+    :param watchlist_file: The name of a JSON formatted file that contains
+        names and passport numbers on a watchlist
+    :param countries_file: The name of a JSON formatted file that contains
+        country data, such as whether an entry or transit visa is required,
+        and whether there is currently a medical advisory
+    :return: List of strings. Possible values of strings are: "Accept",
+        "Reject", "Secondary", and "Quarantine"
     """
 
     # open files, convert files to python style
-    # example_entries.json
     try:
         with open(input_file) as file_reader:
-            #File to string
             file_contents = file_reader.read()
-            #string load to dict/list, each entry in list is 1 record in the json
             input_contents = json.loads(file_contents.lower())
     except FileNotFoundError:
         raise FileNotFoundError("file not find")
@@ -60,7 +61,8 @@ def decide(input_file, watchlist_file, countries_file):
     for line in countries_contents.values():
         if line["medical_advisory"] != "":
             medical_list.append(line["code"])
-    # create list for watch list info
+
+    # create lists for watch list info
     first_list = []
     last_list = []
     passport_list = []
@@ -86,7 +88,6 @@ def decide(input_file, watchlist_file, countries_file):
         if line["transit_visa_required"] == "1":
             transit_visa_list.append(line["code"])
 
-    #entry is a genetic/var
     for entry in input_contents:
         if entry["from"]["country"] in medical_list:
             result.append("Quarantine")
@@ -152,8 +153,8 @@ def decide(input_file, watchlist_file, countries_file):
         else:
             decision.append("Accept")
     # return decision
-    if len(decision)> 0:
-        return(decision)
+    if len(decision)>0:
+        return decision
 
 def valid_passport_format(passport_number):
     """
