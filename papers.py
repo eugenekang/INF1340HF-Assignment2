@@ -29,17 +29,26 @@ def decide(input_file, watchlist_file, countries_file):
 
     # open files, convert files to python style
     # example_entries.json
-    with open(input_file) as file_reader:
+    try:
+        with open(input_file) as file_reader:
             #File to string
             file_contents = file_reader.read()
             #string load to dict/list, each entry in list is 1 record in the json
             input_contents = json.loads(file_contents.lower())
-    with open(watchlist_file) as file_reader:
+    except FileNotFoundError:
+        raise FileNotFoundError("file not find")
+    try:
+        with open(watchlist_file) as file_reader:
             file_contents = file_reader.read()
             watchlist_contents = json.loads(file_contents.lower())
-    with open(countries_file) as file_reader:
+    except FileNotFoundError:
+        raise FileNotFoundError("file not find")
+    try:
+        with open(countries_file) as file_reader:
             file_contents = file_reader.read()
             countries_contents = json.loads(file_contents.lower())
+    except FileNotFoundError:
+        raise FileNotFoundError("file not find")
 
     # create result list
     result = []
@@ -68,13 +77,13 @@ def decide(input_file, watchlist_file, countries_file):
     # create lists for visit visas
     visit_visa_list = []
     for line in countries_contents.values():
-        if line["visitor_visa_required"] == 1:
+        if line["visitor_visa_required"] == "1":
             visit_visa_list.append(line["code"])
 
     # create lists for transit visas
     transit_visa_list = []
     for line in countries_contents.values():
-        if line["transit_visa_required"] == 1:
+        if line["transit_visa_required"] == "1":
             transit_visa_list.append(line["code"])
 
     #entry is a genetic/var
@@ -108,6 +117,9 @@ def decide(input_file, watchlist_file, countries_file):
             # if country is on visa requirement list
             if entry["home"]["country"] in visit_visa_list:
                 try:
+                    # check visa date format
+                    if valid_date_format(entry["visa"]["date"]) != True:
+                        result.append("Reject")
                     # check for valid visa date
                     if valid_visa_date(entry["visa"]["date"]) != True:
                         result.append("Reject")
@@ -116,11 +128,18 @@ def decide(input_file, watchlist_file, countries_file):
     # check if in transit
         if entry["entry_reason"] == "transit":
             if entry["home"]["country"] in transit_visa_list:
-                try:
+
+                    if valid_date_format(entry["visa"]["date"]) != True:
+                        result.append("Reject")
+                    # check for valid visa date
                     if valid_visa_date(entry["visa"]["date"]) != True:
                         result.append("Reject")
-                except:
-                    result.append("Reject")
+    # check passport format
+        if valid_passport_format(entry["passport"]) != True:
+            result.append("Reject")
+    # check birth date format
+        if valid_date_format(entry["birth_date"]) != True:
+            result.append("Reject")
     # order of priority: quarantine, reject, secondary, and accept
         if "Quarantine" in result:
             decision.append("Quarantine")
@@ -133,12 +152,8 @@ def decide(input_file, watchlist_file, countries_file):
         else:
             decision.append("Accept")
     # return decision
-    if len(decision)>0:
+    if len(decision)> 0:
         return(decision)
-
-
-
-
 
 def valid_passport_format(passport_number):
     """
@@ -172,9 +187,11 @@ def valid_visa_date(date):
     :param date: visa date being checked
     :return: True if date is within 2 years, False otherwise
     """
+    today = datetime.date.today()
+    year, month, day = date.split("-")
+    visa_date = datetime.date(int(year), int(month),int(day))
 
-    valid_by_date = datetime.datetime.now() - datetime.timedelta(days=2*365.25)
-    if valid_by_date.strftime("%Y-%m-%d") < date.strftime("%Y-%m-%d"):
+    if abs((today-visa_date).days) < 365*2:
         return True
     else:
         return False
