@@ -69,11 +69,11 @@ def decide(input_file, watchlist_file, countries_file):
 
     # collect info in lists
     for line in watchlist_contents:
-        if line["first_name"] !="":
+        if line["first_name"] != "":
             first_list.append(line["first_name"])
-        if line["last_name"] !="":
+        if line["last_name"] != "":
             last_list.append(line["last_name"])
-        if line["passport"] !="":
+        if line["passport"] != "":
             passport_list.append(line["passport"])
 
     # create lists for visit visas
@@ -92,7 +92,8 @@ def decide(input_file, watchlist_file, countries_file):
         if entry["from"]["country"] in medical_list:
             result.append("Quarantine")
     # check traveller info vs watchlist
-        if entry["passport"] in passport_list or entry["first_name"] in first_list or entry["last_name"] in last_list:
+        if entry["passport"] in passport_list or entry["first_name"] \
+                in first_list or entry["last_name"] in last_list:
             result.append("Secondary")
     # check incomplete entry
         for value in entry.values():
@@ -119,10 +120,10 @@ def decide(input_file, watchlist_file, countries_file):
             if entry["home"]["country"] in visit_visa_list:
                 try:
                     # check visa date format
-                    if valid_date_format(entry["visa"]["date"]) != True:
+                    if valid_date_format(entry["visa"]["date"]) is not True:
                         result.append("Reject")
                     # check for valid visa date
-                    if valid_visa_date(entry["visa"]["date"]) != True:
+                    if valid_visa_date(entry["visa"]["date"]) is not True:
                         result.append("Reject")
                 except:
                     result.append("Reject")
@@ -130,16 +131,16 @@ def decide(input_file, watchlist_file, countries_file):
         if entry["entry_reason"] == "transit":
             if entry["home"]["country"] in transit_visa_list:
 
-                    if valid_date_format(entry["visa"]["date"]) != True:
+                    if valid_date_format(entry["visa"]["date"]) is not True:
                         result.append("Reject")
                     # check for valid visa date
-                    if valid_visa_date(entry["visa"]["date"]) != True:
+                    if valid_visa_date(entry["visa"]["date"]) is not True:
                         result.append("Reject")
     # check passport format
-        if valid_passport_format(entry["passport"]) != True:
+        if valid_passport_format(entry["passport"]) is not True:
             result.append("Reject")
     # check birth date format
-        if valid_date_format(entry["birth_date"]) != True:
+        if valid_date_format(entry["birth_date"]) is not True:
             result.append("Reject")
     # order of priority: quarantine, reject, secondary, and accept
         if "Quarantine" in result:
@@ -153,12 +154,14 @@ def decide(input_file, watchlist_file, countries_file):
         else:
             decision.append("Accept")
     # return decision
-    if len(decision)>0:
+    if len(decision) > 0:
         return decision
+
 
 def valid_passport_format(passport_number):
     """
-    Checks whether a passport number is five sets of five alpha-number characters separated by dashes
+    Checks whether a passport number is five sets of five alpha-number
+        characters separated by dashes
     :param passport_number: alpha-numeric string
     :return: Boolean; True if the format is valid, False otherwise
     """
@@ -182,15 +185,17 @@ def valid_date_format(date_string):
     except ValueError:
         return False
 
+
 def valid_visa_date(date):
     """
-    Checks to ensure the visa has a valid date, ie. issue date is < 2 year from current date.
+    Checks to ensure the visa has a valid date, ie. issue date is < 2 year
+        from current date.
     :param date: visa date being checked
     :return: True if date is within 2 years, False otherwise
     """
     today = datetime.date.today()
     year, month, day = date.split("-")
-    visa_date = datetime.date(int(year), int(month),int(day))
+    visa_date = datetime.date(int(year), int(month), int(day))
 
     if abs((today-visa_date).days) < 365*2:
         return True
